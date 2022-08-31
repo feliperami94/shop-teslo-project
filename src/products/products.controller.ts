@@ -19,17 +19,17 @@ export class ProductsController {
   }
 
   @Get(':searchTerm')
-  findOne(@Param('searchTerm', ParseUUIDPipe) searchTerm: string) {
+  findOne(@Param('searchTerm') searchTerm: string) {
     return this.productsService.findOne(searchTerm);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(+id, updateProductDto);
+  update(@Param('id', ParseUUIDPipe ) id: string, @Body() updateProductDto: UpdateProductDto) {
+    return this.productsService.update(id, updateProductDto);
   }
 
-  @Delete(':searchTerm')
-  remove(@Param('searchTerm', ParseUUIDPipe) searchTerm: string) {
-    return this.productsService.remove(searchTerm);
+  @Delete(':id')
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.productsService.remove(id);
   }
 }

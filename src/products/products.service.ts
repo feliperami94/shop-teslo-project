@@ -1,10 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ObjectID, Repository } from 'typeorm';
+import { ILike, ObjectID, Repository, Like, TreeLevelColumn } from 'typeorm';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { PaginationDto } from '../common/dtos/pagination.dto';
+import {validate as isUUID} from 'uuid';
 
 @Injectable()
 export class ProductsService {
@@ -38,22 +39,46 @@ export class ProductsService {
   }
 
   async findOne(searchTerm: string) {
-    const product = await this.productRepository.findOneBy({id: searchTerm})
-    console.log(product)
+  let product: Product;
+    if(isUUID(searchTerm)){
+      product = await this.productRepository.findOneBy({id: searchTerm})
+    } else{
+      const queryBuilder = this.productRepository.createQueryBuilder();
+      product = await queryBuilder
+      .where(`UPPER(title) =:title or slug=:slug`, { //The two dots is to give the parameter
+        title: searchTerm.toUpperCase(),
+        slug: searchTerm.toLowerCase()
+      }).getOne()
+
+    }
+
     if (!product){
       throw new NotFoundException(`Couldn't find any product with the id ${searchTerm}`)
     } 
     return product;
   }
 
-  update(id: number, updateProductDto: UpdateProductDto) {
-    return `This action updates a #${id} product`;
+  async update(id: string, updateProductDto: UpdateProductDto) {
+    const product = await this.productRepository.preload({ //The preload just find the record with the id and prepare it for the action.
+      id: id,
+      ...updateProductDto
+    })
+
+    if(!product) throw new NotFoundException(`Product with id: ${id} not found`)
+
+    try {
+      const updatedProduct = await this.productRepository.save(product);
+      return updatedProduct
+      
+    } catch (error) {
+      this.handleDBExceptions(error)
+    }
   }
 
-  async remove(searchTerm: string) {
-    const product = await this.findOne(searchTerm);
+  async remove(id: string) {
+    const product = await this.findOne(id);
     if (product){
-      await this.productRepository.delete({id: searchTerm})
+      await this.productRepository.delete({id})
     } 
   }
 
