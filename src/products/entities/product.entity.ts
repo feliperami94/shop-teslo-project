@@ -1,7 +1,7 @@
-import { ExecSyncOptionsWithBufferEncoding } from "child_process";
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { ProductImage } from "./index";
 
-@Entity()
+@Entity({ name: 'products' })
 export class Product {
     @PrimaryGeneratedColumn('uuid')
     id:string;
@@ -45,6 +45,13 @@ export class Product {
         default: []
     })
     tags: string[]
+
+    @OneToMany(
+        () => ProductImage,
+        (productImage) => productImage.product,
+        {cascade: true, eager: true} //Cascade: If a product is deleted, the images related are also deleted
+    ) //Eager true means that when loading a Product it will automatically load the relations
+    images?: ProductImage[];
 
     @BeforeInsert()
     checkSlugInsert(){
