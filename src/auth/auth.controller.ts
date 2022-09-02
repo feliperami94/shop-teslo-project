@@ -1,11 +1,11 @@
 import { Controller, Get, Post, Body, UseGuards, Req, SetMetadata } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { GetUser } from './deorators/get-user.decorator';
-import { RawHeaders } from './deorators/raw-headers.decorator';
+import { Auth, GetUser,RawHeaders, RoleProtected } from './decorators/index';
 import { CreateUserDto, LoginUserDto } from './dto/index';
 import { User } from './entities/user.entity';
 import { UserRoleGuard } from './guards/user-role.guard';
+import { ValidRoles } from './interfaces/valid-roles';
 
 
 @Controller('auth')
@@ -39,9 +39,21 @@ export class AuthController {
   }
 
   @Get('private2')
-  @SetMetadata('roles', ['admin', 'super-user'])
+  // @SetMetadata('roles', ['admin', 'super-user']) //This method is not recommended. Instead, use it like the following:
+  @RoleProtected(ValidRoles.superUser, ValidRoles.admin)
   @UseGuards(AuthGuard(), UserRoleGuard) //When using custom guards, don't use (), don't need to create a new instance
   privateRoute2(
+    @GetUser() user: User
+  ) {
+    return {
+      ok: true,
+      user
+    }
+  }
+
+  @Get('private3')
+  @Auth(ValidRoles.admin, ValidRoles.superUser)
+  privateRoute3(
     @GetUser() user: User
   ) {
     return {
