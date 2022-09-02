@@ -1,10 +1,11 @@
-import { Controller, Get, Post, Body, UseGuards, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, SetMetadata } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { GetUser } from './deorators/get-user.decorator';
 import { RawHeaders } from './deorators/raw-headers.decorator';
 import { CreateUserDto, LoginUserDto } from './dto/index';
 import { User } from './entities/user.entity';
+import { UserRoleGuard } from './guards/user-role.guard';
 
 
 @Controller('auth')
@@ -23,7 +24,7 @@ export class AuthController {
   }
 
   @Get('private')
-  @UseGuards( AuthGuard() ) 
+  @UseGuards( AuthGuard() )  
   testingPrivateRoute(
     // @Req() request: Express.Request, Just for reference
     @GetUser('email') userEmail: string,
@@ -34,6 +35,18 @@ export class AuthController {
       message: 'Hola Mundo Private',
       userEmail,
       rawHeaders
+    }
+  }
+
+  @Get('private2')
+  @SetMetadata('roles', ['admin', 'super-user'])
+  @UseGuards(AuthGuard(), UserRoleGuard) //When using custom guards, don't use (), don't need to create a new instance
+  privateRoute2(
+    @GetUser() user: User
+  ) {
+    return {
+      ok: true,
+      user
     }
   }
 
