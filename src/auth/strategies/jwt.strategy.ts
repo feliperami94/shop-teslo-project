@@ -25,7 +25,7 @@ export class JwtStrategy extends PassportStrategy( Strategy ){
     }
 
 
-    async validate ( payload: JwtPayload): Promise<User> { //Created to let me know if the user is active
+    async validate ( payload: JwtPayload): Promise<User> { //Created to let me know if the user is active. This will be called if the JWT is valid and hasn't expired
 
         const { email }= payload;
 
