@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req, SetMetadata } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, SetMetadata, ParseUUIDPipe, Param } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { Auth, GetUser,RawHeaders, RoleProtected } from './decorators/index';
@@ -23,11 +23,12 @@ export class AuthController {
     return this.authService.login(loginUserDto);
   }
 
-  @Get()
+  @Get('check-status')
+  @Auth()
   checkAuthStatus(
-    //todo:
+    @GetUser() user:User
   ){
-    return this.authService.checkAuthStatus(/*id*/);
+    return this.authService.checkAuthStatus(user);
   }
 
   @Get('private')

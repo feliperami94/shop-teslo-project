@@ -53,10 +53,8 @@ export class AuthService {
 
     const { password, id } = loginUserDto;
 
-    const user = await this.userRepository.findOne({
-      where: {id},
-      select: {email: true, id: true, password: true} //Just returning this info from the query
-    })
+    const user = await this.findUserById(id);
+
 
     if( !user )
       throw new UnauthorizedException('Credentials are not valid (id)');
@@ -68,6 +66,14 @@ export class AuthService {
       ...user,
       token: this.getJwtToken({id: user.id})
     }
+
+  }
+
+  private async findUserById(id: string){
+    return await this.userRepository.findOne({
+      where: {id},
+      select: {email: true, id: true, password: true} //Just returning this info from the query
+    })
 
   }
 
@@ -84,5 +90,16 @@ export class AuthService {
     console.log(error)
     throw new InternalServerErrorException('Please check server logs')
   }
+
+  async checkAuthStatus(user: User){
+
+    return {
+      ...user,
+      token: this.getJwtToken({id: user.id})
+    }
+
+
+  } 
+
 
 }
