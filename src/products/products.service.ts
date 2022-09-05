@@ -6,6 +6,7 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product, ProductImage } from './entities/index';
 import { PaginationDto } from '../common/dtos/pagination.dto';
 import {validate as isUUID} from 'uuid';
+import { User } from '../auth/entities/user.entity';
 
 @Injectable()
 export class ProductsService {
@@ -23,7 +24,7 @@ export class ProductsService {
 
   ){}
 
-  async create(createProductDto: CreateProductDto) {
+  async create(createProductDto: CreateProductDto, user: User) {
 
     try {
       const { images = [], ... productDetails} = createProductDto;
@@ -31,7 +32,8 @@ export class ProductsService {
 
       const product = this.productRepository.create({
         ...productDetails,
-        images: images.map(image => this.productImageRepository.create({url: image}))
+        images: images.map(image => this.productImageRepository.create({url: image})),
+        user
       }); //This only creates the entity from the dto. Doesn´t affect the db
       await this.productRepository.save(product)
       return {...product, images}
@@ -88,7 +90,7 @@ export class ProductsService {
     }
   }
 
-  async update(id: string, updateProductDto: UpdateProductDto) {
+  async update(id: string, updateProductDto: UpdateProductDto, user: User) {
     const {images, ...toUpdate} = updateProductDto;   
     
     const product = await this.productRepository.preload({ //The preload just find the record with the id and prepare it for the action.
@@ -115,6 +117,7 @@ export class ProductsService {
 
       }
 
+      product.user = user;
       await queryRunner.manager.save(product); //When using queryRunner manager there is no impact of the db
       // const updatedProduct = await this.productRepository.save(product);
 
